@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# Generated cards. Keep a couple by hand for the README if you want them.
+out/*.png
+
+.DS_Store
+*.log
