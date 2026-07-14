@@ -19,6 +19,16 @@ export const config = {
   anthropicApiKey: req("ANTHROPIC_API_KEY"),
   model: process.env.ANTHROPIC_MODEL ?? "claude-opus-4-8",
 
+  // ---- artwork ----
+  // "openai" uses gpt-image-1 for a real illustration; anything else (or a missing
+  // key) uses the procedural engine. OpenAI failures always fall back to procedural,
+  // so this switch changes quality and latency, never reliability.
+  imageProvider: (process.env.OPENAI_API_KEY ? (process.env.IMAGE_PROVIDER ?? "openai") : "procedural") as
+    | "openai"
+    | "procedural",
+  openaiApiKey: process.env.OPENAI_API_KEY ?? "",
+  imageTimeoutMs: Number(process.env.IMAGE_TIMEOUT_MS ?? 25_000),
+
   // ---- x402 / OKX payments ----
   // The OKX SDK takes a USD string and converts to USDT0 atomic units itself.
   // Keep this in sync with the `fee` you register on-chain for the ASP listing.
@@ -38,7 +48,11 @@ export const config = {
   maxDescriptionChars: 400,
   maxImageBytes: 4 * 1024 * 1024,
   maxBodySize: "12mb",
-  generationTimeoutMs: 30_000,
+  // The whole-pipeline deadline. Must clear the reading call plus the image call,
+  // otherwise the outer timeout fires before the image provider's own fallback can.
+  generationTimeoutMs: Number(
+    process.env.GENERATION_TIMEOUT_MS ?? (process.env.OPENAI_API_KEY ? 60_000 : 30_000),
+  ),
   rateLimitWindowMs: 60_000,
   rateLimitMax: 30,
 } as const;

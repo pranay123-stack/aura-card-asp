@@ -11,6 +11,10 @@ services:
       # --- secrets: set these in the Render dashboard, never in this file ---
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Optional. Set it to draw the illustration with gpt-image-1; omit it and the
+      # procedural engine draws it instead. Failures fall back either way.
+      - key: OPENAI_API_KEY
+        sync: false
       - key: OKX_API_KEY
         sync: false
       - key: OKX_SECRET_KEY

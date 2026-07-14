@@ -56,6 +56,7 @@ Returns an image block (the card), a text block (the reading), and `structuredCo
   "vibe":    "gently-frazzled",
   "palette": ["#1F2233", "#3A4A6B", "#E8A94B", "#C4553B"],
   "visual":  { "motif": "static", "energy": 0.7, "density": 0.8, "grain": 0.35, "symmetry": 2 },
+  "artwork_source": "procedural",        // or "openai"
   "width": 1024, "height": 1536, "generated_in_ms": 9001
 }
 ```
@@ -127,16 +128,28 @@ description (+ optional photo)
    ├─► one Claude call (claude-opus-4-8, structured output)
    │      └─► reading + title + vibe + 4-colour palette + "visual DNA"
    │
-   ├─► procedural art engine  ◄── driven by that visual DNA
-   │      motif · energy · density · grain · symmetry → seeded SVG
+   ├─► artwork  ◄── driven by that visual DNA
+   │      ├─ gpt-image-1        if OPENAI_API_KEY is set
+   │      └─ procedural engine  otherwise, and on ANY OpenAI failure
    │
    └─► compositor (sharp)
           art + typography + palette swatches + watermark → 1024×1536 PNG
 ```
 
-The one design decision worth defending: **the artwork isn't a separate generation.** The same model call that writes the reading also emits a *visual DNA* block — a motif (`orbit`, `bloom`, `static`, `drift`, `spire`, `tide`) plus energy, density, grain, and symmetry. The art engine renders from that. So a frazzled desk actually gets a high-energy, high-density, low-symmetry `static` field, and a quiet Sunday gets a calm `drift`. The picture is the same read of you as the words.
+The design decision worth defending: **the artwork is driven by the same read of you as the words.** The model call that writes the reading also emits a *visual DNA* block — a motif (`orbit`, `bloom`, `static`, `drift`, `spire`, `tide`) plus energy, density, grain, and symmetry. Both artwork engines render from that DNA. So a frazzled desk genuinely gets a high-energy, high-density, low-symmetry `static` composition, and a quiet Sunday gets a calm `drift`. The picture isn't decoration behind the text; it's the same judgement, expressed differently.
 
-It's also seeded from your description, so it's deterministic — the same input gives the same card — and it renders in milliseconds with no second API call, no image-model latency, and no failure mode where the art provider is down mid-demo.
+### Two engines, one contract
+
+| | `gpt-image-1` | procedural |
+|---|---|---|
+| Look | Illustrated risograph poster art | Abstract generative composition |
+| Cost | ~$0.02–0.04/call | free |
+| Latency | +10–20s | ~50ms |
+| Fails? | Yes — timeouts, rate limits, refusals | Never |
+
+**OpenAI is raced against a deadline, and every failure falls back to procedural.** A card always ships. There is no path where a judge watching the demo sees an error because an image API had a bad minute. The response tells you which engine drew it via `artwork_source`.
+
+Set `OPENAI_API_KEY` to turn on illustration; leave it unset for the free, instant, deterministic path. Everything below the art box — typography, swatches, watermark — is identical either way, so the two look like one product.
 
 ---
 

@@ -13,22 +13,66 @@ const MARGIN = 72;
 const SANS = "DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif";
 const SERIF = "DejaVu Serif, Liberation Serif, Georgia, serif";
 
-export async function composeCard(reading: AuraReading, seedText: string): Promise<Buffer> {
-  const svg = buildCardSvg(reading, seedText);
+/**
+ * Composes the final card.
+ *
+ * `artworkPng` is the generated illustration, when there is one. It is cover-fitted
+ * into the art box and then run through the same grain + vignette treatment the
+ * procedural art gets, so an OpenAI card and a procedural card sit in the same set
+ * rather than looking like two different products.
+ *
+ * When it's null we render the procedural SVG inline instead. Everything below the
+ * art box — typography, swatches, watermark — is identical either way.
+ */
+export async function composeCard(
+  reading: AuraReading,
+  seedText: string,
+  artworkPng?: Buffer | null,
+): Promise<Buffer> {
   try {
+    let artDataUri: string | undefined;
+
+    if (artworkPng) {
+      // Cover-fit to the art box: fill it completely, crop the overflow, never letterbox.
+      const fitted = await sharp(artworkPng)
+        .resize(ART_W, ART_H, { fit: "cover", position: "attention" })
+        .png()
+        .toBuffer();
+      artDataUri = `data:image/png;base64,${fitted.toString("base64")}`;
+    }
+
+    const svg = buildCardSvg(reading, seedText, artDataUri);
     return await sharp(Buffer.from(svg), { density: 96 }).png({ quality: 92 }).toBuffer();
   } catch (err) {
     throw generationFailed(`Card compositing failed: ${(err as Error).message}`);
   }
 }
 
-function buildCardSvg(reading: AuraReading, seedText: string): string {
+function buildCardSvg(reading: AuraReading, seedText: string, artDataUri?: string): string {
   const [c1, c2, c3, c4] = reading.palette;
   const ink = darken(c1, 0.62);
   const paper = lighten(c1, 0.92);
   const muted = lighten(ink, 0.45);
 
-  const art = renderArt(reading, seedText);
+  // Either the generated illustration, treated to match the house look, or the
+  // procedural engine's own SVG.
+  const art = artDataUri
+    ? `
+    <defs>
+      <filter id="grain" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="3" seed="7" result="n"/>
+        <feColorMatrix type="saturate" values="0" in="n" result="m"/>
+        <feComponentTransfer in="m"><feFuncA type="linear" slope="${(0.05 + reading.visual.grain * 0.18).toFixed(3)}"/></feComponentTransfer>
+      </filter>
+      <radialGradient id="vignette" cx="50%" cy="45%" r="75%">
+        <stop offset="55%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.38"/>
+      </radialGradient>
+    </defs>
+    <image href="${artDataUri}" x="0" y="0" width="${ART_W}" height="${ART_H}" preserveAspectRatio="xMidYMid slice"/>
+    <rect width="${ART_W}" height="${ART_H}" filter="url(#grain)" style="mix-blend-mode:overlay"/>
+    <rect width="${ART_W}" height="${ART_H}" fill="url(#vignette)"/>`
+    : renderArt(reading, seedText);
 
   // Title: shrink a step if it's long, so it never collides with the margin.
   const titleSize = reading.title.length > 22 ? 46 : 58;

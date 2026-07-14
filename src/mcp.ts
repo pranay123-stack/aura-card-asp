@@ -63,6 +63,9 @@ export function buildMcpServer(): McpServer {
             symmetry: z.number(),
           })
           .describe("The visual DNA used to generate the artwork."),
+        artwork_source: z
+          .string()
+          .describe("Which engine drew the illustration: 'openai' or 'procedural'."),
         width: z.number(),
         height: z.number(),
         generated_in_ms: z.number(),
