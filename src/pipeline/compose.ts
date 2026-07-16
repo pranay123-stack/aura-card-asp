@@ -74,9 +74,11 @@ function buildCardSvg(reading: AuraReading, seedText: string, artDataUri?: strin
     <rect width="${ART_W}" height="${ART_H}" fill="url(#vignette)"/>`
     : renderArt(reading, seedText);
 
-  // Title: shrink a step if it's long, so it never collides with the margin.
-  const titleSize = reading.title.length > 22 ? 46 : 58;
-  const titleLines = wrap(reading.title.toUpperCase(), CARD_W - MARGIN * 2, titleSize * 0.62, 2);
+  // Title: shrink a step if it's long, so a wide title never runs past the margin.
+  // 0.72 is an empirical advance width for uppercase bold serif caps — the earlier
+  // 0.62 underestimated it and let long titles overflow the right edge.
+  const titleSize = reading.title.length > 18 ? 46 : 58;
+  const titleLines = wrap(reading.title.toUpperCase(), CARD_W - MARGIN * 2, titleSize * 0.72, 2);
 
   const bodySize = reading.reading.length > 170 ? 27 : 31;
   const bodyLines = wrap(reading.reading, CARD_W - MARGIN * 2, bodySize * 0.505, 5);
