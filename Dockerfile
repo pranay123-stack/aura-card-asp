@@ -29,6 +29,8 @@ COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
+# Landing-page sample images, served at /assets.
+COPY assets ./assets
 
 # Render injects PORT; default matches config.ts.
 ENV PORT=8080

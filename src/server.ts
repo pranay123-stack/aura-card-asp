@@ -3,7 +3,9 @@ import express, { type NextFunction, type Request, type Response } from "express
 import rateLimit from "express-rate-limit";
 import { ZodError } from "zod";
 import { AGENT_NAME, NETWORK, USDT0_ADDRESS, config, paymentsConfigured } from "./config.js";
+import path from "node:path";
 import { AspError } from "./lib/errors.js";
+import { landingPage } from "./landing.js";
 import { buildMcpServer } from "./mcp.js";
 import { generateAuraCard } from "./pipeline/index.js";
 import { buildPaymentLayer, refundSettlement } from "./x402.js";
@@ -54,6 +56,13 @@ const gateMcp: express.RequestHandler = (req, res, next) => {
 };
 
 // ---------------------------------------------------------------- discovery
+
+// Human-facing landing page + its sample images. Aura Card is an agent service,
+// so this is purely so a person who opens the URL sees what it is, not an error.
+app.get("/", (_req, res) => {
+  res.type("html").send(landingPage());
+});
+app.use("/assets", express.static(path.resolve(process.cwd(), "assets"), { maxAge: "1h" }));
 
 app.get("/health", (_req, res) => {
   res.json({
