@@ -1,0 +1,160 @@
+================================================================
+AURA CARD — 90-SECOND DEMO SCRIPT
+OKX.AI Genesis Hackathon  ·  Agent ID 6134
+================================================================
+
+HOW TO USE THIS SCRIPT
+  • Lines in "quotes"  = what you SAY (narration).
+  • Lines in [brackets] = what you DO on screen.
+  • Lines starting with $ = commands to type/run.
+  • Warm the endpoint first: run one throwaway call ~30s before
+    recording (Render cold-starts take ~50s and will ruin pacing).
+  • Have terminal + browser side by side. Font size up.
+  • Total target: ~90 seconds. Don't rush the card reveal.
+
+Two versions of the PAYMENT beat are given:
+  ▸ VERSION A (best) — a real paid call. Needs ~$2 USD₮0 in the
+    buyer wallet. This is the money shot: real USDT, on-chain.
+  ▸ VERSION B (no funds) — show the 402 paywall + a pre-made card.
+Pick one. Everything else is identical.
+
+
+================================================================
+[0:00 – 0:15]  INTRO  ·  PROJECT SUMMARY
+================================================================
+
+[On screen: just your terminal, or one Aura Card image full-screen.]
+
+SAY:
+  "This is Aura Card — an Agent Service Provider on OKX.AI.
+
+   You give it a short description of something personal: your
+   desk, your outfit, your pet, your mood. It hands back a
+   shareable card — a witty, weirdly specific personality reading,
+   a matching colour palette, and original generated art, all in
+   one image.
+
+   It's a standard MCP server. It costs fifty cents a call, paid
+   in USDT, settled on-chain over x402 on X Layer. No signup, no
+   API key — an agent just pays and gets a result. Let me show you."
+
+
+================================================================
+[0:15 – 0:30]  IT'S A REAL, LIVE SERVICE
+================================================================
+
+[On screen: terminal.]
+
+SAY: "First — it's live. Here's the service describing itself."
+
+$ curl -s https://aura-card-asp.onrender.com/.well-known/agent-card.json | python3 -m json.tool
+
+[Point at: name "Aura Card", the tool, price 0.5 USDT, network eip155:196.]
+
+SAY:
+  "There's the agent card — the tool, the price, the network,
+   the token. Discovery is free. You only pay when you actually
+   generate a card."
+
+
+================================================================
+[0:30 – 0:50]  THE PAYWALL  ·  x402
+================================================================
+
+[On screen: terminal.]
+
+SAY: "So let's call it. First with no payment attached."
+
+$ curl -s -D - -o /dev/null -X POST https://aura-card-asp.onrender.com/v1/aura-card -H 'content-type: application/json' -d '{"description":"three half-finished mugs and a plastic dinosaur"}' | grep -iE 'HTTP|payment-required'
+
+[Freeze on the "HTTP/2 402" line and the payment-required header.]
+
+SAY:
+  "And the server says: 402, Payment Required. That's the whole
+   x402 protocol in one line — it's not an error, it's a price tag.
+   Network, token, amount, who to pay. Machine-readable. My agent
+   didn't need an account. It just needed to be told the price."
+
+
+================================================================
+[0:50 – 1:12]  PAY + GET THE CARD    ← pick VERSION A or B
+================================================================
+
+------------- VERSION A · REAL PAID CALL (best) ----------------
+
+[On screen: terminal.]
+
+SAY: "So it pays — signs a gasless USDT authorization and retries."
+
+$ npm run paid "my desk: three half-finished mugs, a keyboard I regret buying, and a small plastic dinosaur"
+
+[Let the steps print: 402 → sign → HTTP 200 → settlement tx hash.]
+
+SAY:
+  "Signed, verified, and settled on-chain — there's the transaction
+   hash. Fifty cents of real USDT moved on X Layer, and I never
+   touched a wallet UI."
+
+[Open out/paid-card.png full-screen. Pause. Read the reading aloud, deadpan:]
+
+  "…and here's what fifty cents bought."   [read the card's reading]
+
+----------------------------------------------------------------
+
+------------- VERSION B · NO FUNDS NEEDED ----------------------
+
+[On screen: terminal. Generate a card locally.]
+
+SAY: "Here's what a paid call returns — generated live."
+
+$ npm run demo
+
+[Let ONE card finish (Ctrl+C after the first if you want it short),
+ then open its PNG in out/ full-screen.]
+
+SAY:
+  "One Claude call writes the reading, the palette, and the visual
+   DNA. A procedural engine draws the art from that same read — so
+   the picture is the same judgement as the words. Read this one:"
+
+[Read the card's reading aloud, deadpan.]
+
+----------------------------------------------------------------
+
+
+================================================================
+[1:12 – 1:30]  IT'S REGISTERED  ·  CALL TO ACTION
+================================================================
+
+[On screen: browser — your OKX.AI agent listing / the agent-card page.]
+
+SAY:
+  "And it's not a mockup. It's registered on-chain on OKX.AI as
+   an ERC-8004 Agent Service Provider — Agent ID 6134, live on
+   X Layer. Any agent can find it, read the price, pay, and use it,
+   with no human in the loop.
+
+   It's public, it's a real endpoint, and it costs fifty cents.
+   Point your agent at it — or just describe your desk and see what
+   it says about you.
+
+   Aura Card. Go get read."
+
+
+================================================================
+RECORDING NOTES
+================================================================
+  • Warm the endpoint 30s before you hit record.
+  • Have a pre-generated card ready as a fallback if the live call
+    stalls on camera — cut to it rather than debugging on tape.
+  • Speak over the ~9s generation instead of waiting in silence.
+  • Use a description that's YOURS and a little embarrassing — the
+    specificity is the product. A generic input makes a flat card.
+  • Keep the card reveal on screen for a full beat. It's the payoff.
+
+X / TWITTER POST (publish with the video, #OKXAI):
+  "I built an agent that costs 50 cents and tells you what your
+   desk says about you. No signup, no API key — my agent hit the
+   endpoint, got a 402, paid in USDT, and got this back.
+   The dinosaur line genuinely got me. #OKXAI
+   [attach the card] [link the demo]"
