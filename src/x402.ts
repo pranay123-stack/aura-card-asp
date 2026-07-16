@@ -7,7 +7,7 @@ import {
   x402ResourceServer,
 } from "@okxweb3/x402-express";
 import type { RequestHandler, Response } from "express";
-import { AGENT_NAME, NETWORK, config } from "./config.js";
+import { AGENT_NAME, NETWORK, USDT0_ADDRESS, config } from "./config.js";
 
 /**
  * x402 payment layer, on OKX's facilitator.
@@ -48,11 +48,22 @@ export function buildPaymentLayer(): PaymentLayer {
 
   resourceServer = new x402ResourceServer(facilitator).register(NETWORK, new ExactEvmScheme());
 
+  // Price as an explicit asset+amount (not a "$0.50" string) so we can attach a
+  // `decimals` field to the 402's `extra`. Without it, OKX's task system can't
+  // resolve USD₮0's decimals (its token list only knows USDT/USDG) and the amount
+  // renders wrong for buyers going through OKX tooling. name/version reproduce the
+  // exact EIP-712 domain the SDK injects for a string price, so EIP-3009 signing is
+  // byte-for-byte unchanged — this only *adds* decimals.
+  const feeAtomic = String(Math.round(parseFloat(config.feeUsdt) * 1_000_000));
   const accepts = {
     scheme: "exact" as const,
     network: NETWORK,
     payTo: config.payTo,
-    price: config.price,
+    price: {
+      asset: USDT0_ADDRESS,
+      amount: feeAtomic,
+      extra: { name: "USD₮0", version: "1", decimals: 6 },
+    },
     maxTimeoutSeconds: config.maxTimeoutSeconds,
   };
 
