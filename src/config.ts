@@ -1,11 +1,5 @@
 import "dotenv/config";
 
-function req(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing required env var: ${name}`);
-  return v;
-}
-
 /** X Layer mainnet. The OKX facilitator serves this network and no other. */
 export const NETWORK = "eip155:196" as const;
 
@@ -16,17 +10,22 @@ export const config = {
   port: Number(process.env.PORT ?? 8080),
   publicUrl: process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 8080}`,
 
-  anthropicApiKey: req("ANTHROPIC_API_KEY"),
+  // ---- reading provider (the LLM that writes the reading + palette + visual DNA) ----
+  // Defaults to OpenAI when OPENAI_API_KEY is set, else Anthropic. Override with READING_PROVIDER.
+  readingProvider: (process.env.READING_PROVIDER ??
+    (process.env.OPENAI_API_KEY ? "openai" : "anthropic")) as "openai" | "anthropic",
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   model: process.env.ANTHROPIC_MODEL ?? "claude-opus-4-8",
+  openaiApiKey: process.env.OPENAI_API_KEY ?? "",
+  openaiReadingModel: process.env.OPENAI_READING_MODEL ?? "gpt-4o",
 
   // ---- artwork ----
-  // "openai" uses gpt-image-1 for a real illustration; anything else (or a missing
-  // key) uses the procedural engine. OpenAI failures always fall back to procedural,
-  // so this switch changes quality and latency, never reliability.
-  imageProvider: (process.env.OPENAI_API_KEY ? (process.env.IMAGE_PROVIDER ?? "openai") : "procedural") as
-    | "openai"
-    | "procedural",
-  openaiApiKey: process.env.OPENAI_API_KEY ?? "",
+  // Procedural by default (fast, free, reliable). Only uses OpenAI image gen when
+  // IMAGE_PROVIDER=openai is set explicitly — so an OpenAI key for the *reading*
+  // doesn't silently turn on slow/costly gpt-image-1. Image failures fall back to procedural.
+  imageProvider: (process.env.IMAGE_PROVIDER === "openai" && process.env.OPENAI_API_KEY
+    ? "openai"
+    : "procedural") as "openai" | "procedural",
   imageTimeoutMs: Number(process.env.IMAGE_TIMEOUT_MS ?? 25_000),
 
   // ---- x402 / OKX payments ----
@@ -51,13 +50,21 @@ export const config = {
   // The whole-pipeline deadline. Must clear the reading call plus the image call,
   // otherwise the outer timeout fires before the image provider's own fallback can.
   generationTimeoutMs: Number(
-    process.env.GENERATION_TIMEOUT_MS ?? (process.env.OPENAI_API_KEY ? 60_000 : 30_000),
+    process.env.GENERATION_TIMEOUT_MS ?? (process.env.IMAGE_PROVIDER === "openai" ? 60_000 : 30_000),
   ),
   rateLimitWindowMs: 60_000,
   rateLimitMax: 30,
 } as const;
 
 export const AGENT_NAME = "Aura Card";
+
+// Fail fast at boot if the chosen reading provider has no key.
+if (config.readingProvider === "anthropic" && !config.anthropicApiKey) {
+  throw new Error("readingProvider=anthropic but ANTHROPIC_API_KEY is not set");
+}
+if (config.readingProvider === "openai" && !config.openaiApiKey) {
+  throw new Error("readingProvider=openai but OPENAI_API_KEY is not set");
+}
 
 /** True once every credential needed to actually take money is present. */
 export function paymentsConfigured(): boolean {
