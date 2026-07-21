@@ -1,10 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { z } from "zod";
 import { config } from "../config.js";
 import { contentRejected, generationFailed, withRetry } from "../lib/errors.js";
 import type { ParsedImage } from "../lib/validate.js";
 
-const client = new Anthropic({ apiKey: config.anthropicApiKey });
+// Both clients are lazy — only built when their key is present.
+const anthropic = config.anthropicApiKey ? new Anthropic({ apiKey: config.anthropicApiKey }) : undefined;
+const openai = config.openaiApiKey ? new OpenAI({ apiKey: config.openaiApiKey }) : undefined;
 
 /**
  * The model returns the reading, a palette, AND a "visual DNA" block. The visual
@@ -92,41 +95,68 @@ Also choose a 4-color palette and the visual DNA. These are not decoration — t
 
 If a photo is attached, use it. Notice what they did not mention.`;
 
-export async function generateReading(
-  description: string,
-  image?: ParsedImage,
-): Promise<AuraReading> {
+function userText(description: string, image?: ParsedImage): string {
+  return `Read this person's aura.\n\n<description>\n${description}\n</description>${
+    image ? "\n\nA photo is attached — factor it in." : ""
+  }`;
+}
+
+/** Anthropic (Claude) path — structured JSON via output_config.format. */
+async function callAnthropic(description: string, image?: ParsedImage): Promise<string> {
+  if (!anthropic) throw generationFailed("Anthropic reading provider is not configured.");
   const content: Anthropic.ContentBlockParam[] = [];
-
   if (image) {
-    content.push({
-      type: "image",
-      source: { type: "base64", media_type: image.mediaType, data: image.base64 },
-    });
+    content.push({ type: "image", source: { type: "base64", media_type: image.mediaType, data: image.base64 } });
   }
-  content.push({
-    type: "text",
-    text: `Read this person's aura.\n\n<description>\n${description}\n</description>${
-      image ? "\n\nA photo is attached — factor it in." : ""
-    }`,
-  });
+  content.push({ type: "text", text: userText(description, image) });
 
-  const raw = await withRetry(async () => {
-    const response = await client.messages.create({
-      model: config.model,
-      max_tokens: 1200,
-      system: SYSTEM,
-      output_config: { format: { type: "json_schema", schema: SCHEMA } },
-      messages: [{ role: "user", content }],
-    });
-
-    if (response.stop_reason === "refusal") {
-      throw contentRejected("That input was declined by the safety system.");
-    }
-    const text = response.content.find((b) => b.type === "text");
-    if (!text || text.type !== "text") throw generationFailed("Model returned no text block.");
-    return text.text;
+  const response = await anthropic.messages.create({
+    model: config.model,
+    max_tokens: 1200,
+    system: SYSTEM,
+    output_config: { format: { type: "json_schema", schema: SCHEMA } },
+    messages: [{ role: "user", content }],
   });
+  if (response.stop_reason === "refusal") {
+    throw contentRejected("That input was declined by the safety system.");
+  }
+  const text = response.content.find((b) => b.type === "text");
+  if (!text || text.type !== "text") throw generationFailed("Model returned no text block.");
+  return text.text;
+}
+
+/** OpenAI path — chat completions with strict json_schema structured output + vision. */
+async function callOpenAI(description: string, image?: ParsedImage): Promise<string> {
+  if (!openai) throw generationFailed("OpenAI reading provider is not configured.");
+  const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
+    { type: "text", text: userText(description, image) },
+  ];
+  if (image) {
+    content.push({ type: "image_url", image_url: { url: `data:${image.mediaType};base64,${image.base64}` } });
+  }
+
+  const resp = await openai.chat.completions.create({
+    model: config.openaiReadingModel,
+    messages: [
+      { role: "system", content: SYSTEM },
+      { role: "user", content },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: { name: "aura_reading", strict: true, schema: SCHEMA as unknown as Record<string, unknown> },
+    },
+  });
+  const choice = resp.choices[0];
+  if (choice?.message?.refusal) throw contentRejected(choice.message.refusal);
+  const text = choice?.message?.content;
+  if (!text) throw generationFailed("OpenAI returned no content.");
+  return text;
+}
+
+export async function generateReading(description: string, image?: ParsedImage): Promise<AuraReading> {
+  const raw = await withRetry(() =>
+    config.readingProvider === "openai" ? callOpenAI(description, image) : callAnthropic(description, image),
+  );
 
   let parsed: AuraReading;
   try {
