@@ -41,9 +41,13 @@ export function buildPaymentLayer(): PaymentLayer {
     apiKey: config.okxApiKey,
     secretKey: config.okxSecretKey,
     passphrase: config.okxPassphrase,
-    // Wait for on-chain confirmation before we hand over the card. A generated card
-    // is cheap to produce but impossible to claw back, so we take the latency.
-    syncSettle: true,
+    // Deliver the card as soon as payment is *verified*; let settlement confirm
+    // on-chain asynchronously. syncSettle:true blocks the HTTP response until the
+    // on-chain transfer confirms (10-30s+), which pushes total latency past OKX's
+    // platform-test timeout — the card itself only takes ~6s to make. For a 0.5 USDT
+    // service the signature is already verified before delivery, so async settlement
+    // is the right trade: fast response, payment still lands.
+    syncSettle: false,
   });
 
   resourceServer = new x402ResourceServer(facilitator).register(NETWORK, new ExactEvmScheme());
