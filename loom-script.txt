@@ -1,0 +1,208 @@
+================================================================
+AURA CARD — 5-MINUTE LOOM DEMO SCRIPT
+OKX.AI Genesis Hackathon  ·  Agent ID 6134
+================================================================
+
+HOW TO USE THIS
+  • "quotes"   = what you SAY out loud.
+  • [brackets] = what you DO / show on screen.
+  • $ lines    = commands to run in the terminal.
+  • Setup before you hit record:
+      – Two windows ready: BROWSER + TERMINAL (big font, ~16pt+).
+      – Browser tabs open, in this order:
+          1. https://aura-card-asp.onrender.com          (landing page)
+          2. https://aura-card-asp.onrender.com/.well-known/agent-card.json
+          3. your OKX.AI agent page (Agent 6134) — or okx.ai
+          4. https://github.com/pranay123-stack/aura-card-asp
+      – Warm the service: run one throwaway card ~30s before recording.
+      – Have out/ folder handy (the generated cards).
+  • Pace: ~5 min. It's a Loom, so relaxed is fine. Breathe. Let the
+    card reveals land. Don't rush the payment explanation.
+
+Target timings are a guide, not a stopwatch.
+
+
+================================================================
+[0:00 – 0:35]  HOOK + WHAT IT IS
+================================================================
+[On screen: the landing page (aura-card-asp.onrender.com), full window.]
+
+SAY:
+  "Hey — I want to show you Aura Card. It's an Agent Service Provider
+   I built for the OKX.AI Genesis Hackathon.
+
+   The idea: the OKX.AI marketplace is an economy where AI agents hire
+   other agents and pay them, in crypto, automatically. Aura Card is one
+   of those services. But instead of something dry like a price feed, I
+   wanted to build a paid agent that gives you something you'd actually
+   want to share.
+
+   Here's what it does: you describe something personal — your desk, your
+   outfit, your pet, your mood — and it hands back a shareable card. A
+   witty, weirdly specific reading of your vibe, a matching colour palette,
+   and original generated art, all in one image. It costs fifty cents a
+   call, and that fifty cents settles on-chain in USDT. Let me show you the
+   whole thing."
+
+
+================================================================
+[0:35 – 1:15]  THE STOREFRONT — what a caller sees
+================================================================
+[On screen: scroll slowly down the landing page.]
+
+SAY:
+  "This is the front door. Anyone — a person or an agent — can see exactly
+   what the service is, what it costs, and how to call it.
+
+   [point at the price badge] Fifty cents a call, over x402, on X Layer.
+
+   [scroll to 'What one call gives you'] One call gives you three things,
+   all read from the same description: a reading, a palette, and generated
+   art.
+
+   [scroll to 'Call it like an agent'] And here's the actual contract —
+   it's a standard HTTP endpoint. Discovery is free; you only pay when you
+   generate. No signup, no API key. That 'free discovery, pay-per-use'
+   shape is exactly what an agent economy needs."
+
+[Switch to the agent-card.json tab.]
+
+SAY:
+  "This is the machine-readable version of the same thing — the tool, the
+   price, the token, the network. This is what another agent reads to
+   decide to use me."
+
+
+================================================================
+[1:15 – 2:15]  THE PRODUCT WORKING — generate a card live
+================================================================
+[Switch to the TERMINAL.]
+
+SAY: "Let's actually run it. I'll generate a couple of cards."
+
+$ npm run demo
+
+[Cards start generating (~6s each). Talk while it runs. Let TWO finish,
+ then Ctrl+C if you want to keep it short.]
+
+SAY (while it generates):
+  "Under the hood, one model call reads the description and writes the
+   reading, chooses the palette, and — this is the important part — outputs
+   a 'visual DNA' that drives the artwork. I'll come back to that."
+
+[Open one finished card in out/ — full screen. Pause. Read the reading
+ out loud, deadpan.]
+
+SAY:
+  "…and there it is. [read the card's reading]
+
+   That's the product. It's specific, it's funny, and it references what
+   you actually told it — not generic horoscope filler. That's a card you'd
+   post."
+
+
+================================================================
+[2:15 – 3:05]  THE CLEVER PART — the art IS the reading
+================================================================
+[Open 2–3 different cards side by side (e.g. a 'static' one and a 'bloom'
+ or 'drift' one from out/), OR the showcase image out/showcase-2-range.png.]
+
+SAY:
+  "Here's the design decision I'm most proud of. Most projects would make a
+   separate image-generation call — decorative wallpaper behind the text.
+
+   I didn't do that. The same model call that writes the reading also
+   decides the *visual character* — the motif, the energy, the density, the
+   symmetry. And a procedural art engine draws the picture from that.
+
+   So look — [point at a frazzled/high-energy card] a chaotic desk gets a
+   chaotic, high-energy, jagged composition. [point at a calm card] A quiet
+   Sunday gets a soft, slow, orderly one. The picture is the *same
+   judgment* as the words, expressed visually.
+
+   And because it's procedural, it's instant, it's free, it's
+   deterministic, and it can never fail mid-call. No second API to go down."
+
+
+================================================================
+[3:05 – 4:05]  THE PAYMENT LAYER — x402, on-chain USDT
+================================================================
+[Switch to the TERMINAL.]
+
+SAY: "Now the part that makes it an agent service and not just an app —
+      the payment. Let me call the endpoint with no payment attached."
+
+$ curl -s -D - -o /dev/null -X POST https://aura-card-asp.onrender.com/v1/aura-card -H 'content-type: application/json' -d '{"description":"three half-finished mugs and a plastic dinosaur"}' | grep -iE 'HTTP|payment-required'
+
+[Freeze on 'HTTP 402' and the 'payment-required' header.]
+
+SAY:
+  "And the server says: 402, Payment Required. This is the whole x402
+   protocol in one response. It's not an error — it's a price tag. The
+   header carries everything a buyer needs: the network, the token, the
+   exact amount, and who to pay.
+
+   [decode it if you want] $ echo '<paste the header value>' | base64 -d
+
+   The buyer's agent reads this, signs a gasless USDT authorization, and
+   retries with the signature. OKX's facilitator verifies it, my server
+   generates the card, and the payment settles on-chain in real USDT on X
+   Layer. Fifty cents moves, agent to agent, with no human touching a
+   wallet.
+
+   And it's careful: payment is verified *before* I do the work, and only
+   settles *after* the card is generated. If generation ever fails, the
+   payment is cancelled — you're never charged for a card you didn't get."
+
+
+================================================================
+[4:05 – 4:35]  IT'S REAL — registered on-chain
+================================================================
+[Switch to your OKX.AI agent page (Agent 6134) or the agent-card.]
+
+SAY:
+  "And this isn't a mockup. It's registered on-chain on OKX.AI as an
+   ERC-8004 Agent Service Provider — Agent ID 6134, live on X Layer.
+   It's deployed on a public URL, the payment rail is validated by OKX's
+   own x402 checker, and any agent in the marketplace can discover it,
+   read the price, pay, and use it — with no human in the loop."
+
+[Optional: flash the GitHub tab.]
+
+SAY (optional):
+  "The whole thing is open source — the MCP server, the payment layer, the
+   art engine, all here."
+
+
+================================================================
+[4:35 – 5:00]  WHY IT MATTERS + CLOSE
+================================================================
+[On screen: back to a nice card, full screen.]
+
+SAY:
+  "So that's Aura Card. What I think makes it work: it's a real, complete,
+   pay-per-call agent service — it actually charges, on-chain — with an
+   output where the art and the words come from the same read of you. It's
+   correct where it needs to be, and fun where it counts.
+
+   Machines paying machines, and what comes out is something you'd actually
+   want to share. That's the whole pitch.
+
+   Thanks for watching — the link's below. Go describe your desk and see
+   what it says about you."
+
+
+================================================================
+NOTES
+================================================================
+  • If you've funded a buyer wallet with USD₮0, replace the [3:05] curl
+    with a REAL paid call:  npm run paid "my desk: three mugs and a dino"
+    — it prints 402 → sign → settle tx → card. That's an even stronger
+    payment beat (a real transaction hash on screen).
+  • If npm run demo feels slow on camera, generate one card, or open
+    pre-made cards from out/ and talk over them.
+  • Keep energy up but calm — it's a Loom, not an ad. Sound like a builder
+    walking a friend through what you made.
+  • Best cards to show (good readings): out/openai-2.png (Router/cat),
+    out/live-card.png (Friday Deploy Roulette), out/demo-pet.png.
+  • Showcase image for the 'art is the reading' beat: out/showcase-2-range.png.
