@@ -124,6 +124,45 @@ app.get("/mcp", (_req, res) => {
   res.status(405).json({ error: { code: "method_not_allowed", message: "Use POST for MCP." } });
 });
 
+// ---------------------------------------------------------------- free "Try it"
+
+// The landing page's "Try it" box calls this. It generates a real card with NO
+// payment, so it's the one unpaid path to real generation — capped hard per IP per
+// day to keep it a demo, not a free API. The paid x402 route below is the product.
+const tryLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: config.tryDailyMax,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: "try_limit_reached",
+      message: `Free tries are limited to ${config.tryDailyMax} a day. Call the paid endpoint for unlimited cards.`,
+    },
+  },
+});
+
+app.post("/try", tryLimiter, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const description =
+      req.body && typeof (req.body as { description?: unknown }).description === "string"
+        ? (req.body as { description: string }).description
+        : "";
+    // Free demo: image never comes from the browser (keeps it fast + cheap), and we
+    // only return what the page needs to show a card.
+    const result = await generateAuraCard({ description });
+    res.json({
+      card_png_base64: result.card_png_base64,
+      reading: result.reading,
+      title: result.title,
+      vibe: result.vibe,
+      palette: result.palette,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ---------------------------------------------------------------- REST
 
 app.post("/v1/aura-card", pay, async (req: Request, res: Response, next: NextFunction) => {

@@ -54,6 +54,11 @@ export const config = {
   ),
   rateLimitWindowMs: 60_000,
   rateLimitMax: 30,
+
+  // The free, human-facing "Try it" box on the landing page generates a real card
+  // without payment — so it's capped hard per IP per day to protect OpenAI credit.
+  // The paid x402 endpoint is the product; this is just try-before-you-buy for people.
+  tryDailyMax: Number(process.env.TRY_DAILY_MAX ?? 8),
 } as const;
 
 export const AGENT_NAME = "Aura Card";
