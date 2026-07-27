@@ -56,8 +56,24 @@ export function landingPage(): string {
   footer{padding:40px 0 56px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
   .brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:2px;color:var(--paper);font-size:14px}
   .brand .b{width:9px;height:9px;border-radius:50%;background:var(--amber)}
-  @media(max-width:760px){.cards{grid-template-columns:1fr 1fr}.cards .third{display:none}.grid3{grid-template-columns:1fr}}
+  @media(max-width:760px){.cards{grid-template-columns:1fr 1fr}.cards .third{display:none}.grid3{grid-template-columns:1fr}.try-grid{grid-template-columns:1fr!important}}
   @media(max-width:480px){.cards{grid-template-columns:1fr}.cards img:nth-child(n+2){display:none}}
+  .try-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start}
+  textarea{width:100%;min-height:120px;resize:vertical;background:#0d0f15;border:1px solid var(--line);border-radius:12px;padding:16px;color:var(--paper);font-family:inherit;font-size:16px;line-height:1.5}
+  textarea:focus{outline:none;border-color:var(--amber)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+  .chip{border:1px solid var(--line);background:var(--ink2);color:#d8d2c6;font-size:13px;padding:7px 13px;border-radius:20px;cursor:pointer}
+  .chip:hover{border-color:var(--amber);color:var(--paper)}
+  .go{background:var(--amber);color:var(--ink);border:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;cursor:pointer;margin-top:6px}
+  .go:disabled{opacity:.55;cursor:default}
+  .note{color:var(--muted);font-size:13px;margin-top:12px}
+  .stage{background:var(--ink2);border:1px solid var(--line);border-radius:14px;min-height:360px;display:flex;align-items:center;justify-content:center;padding:22px;text-align:center;overflow:hidden}
+  .stage img{width:100%;max-width:340px;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);display:block}
+  .stage .ph{color:var(--muted);font-size:15px;max-width:280px}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--amber);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 14px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .reveal-read{color:#d8d2c6;font-size:15px;margin-top:16px;line-height:1.5}
+  .reveal-read b{color:var(--paper)}
 </style>
 </head>
 <body>
@@ -68,7 +84,8 @@ export function landingPage(): string {
       <p class="lede">Describe your desk, outfit, pet, or mood — get a shareable card with a witty, weirdly specific reading, a matching colour palette, and original generated art.</p>
       <span class="badge">◆ ${config.feeUsdt} USDT / call · x402 · X Layer</span>
       <div class="cta">
-        <a class="btn primary" href="${GITHUB}">View the code on GitHub →</a>
+        <a class="btn primary" href="#try">Try it — get your card →</a>
+        <a class="btn ghost" href="${GITHUB}">View the code on GitHub</a>
         <a class="btn ghost" href="${base}/.well-known/agent-card.json">Agent card (JSON)</a>
       </div>
     </div>
@@ -81,6 +98,22 @@ export function landingPage(): string {
       <img class="third" src="/assets/sample-3.png" alt="Aura Card example — Caffeinated Monk"/>
     </div>
   </div>
+
+  <section id="try"><div class="wrap">
+    <h2 class="serif">Try it — get read right now</h2>
+    <p class="sub">Type something personal. A real card comes back — reading, palette, and art. Free to try; no signup.</p>
+    <div class="try-grid">
+      <div>
+        <textarea id="desc" placeholder="e.g. my desk: three half-finished mugs, a plastic dinosaur, and 47 open tabs"></textarea>
+        <div class="chips" id="chips"></div>
+        <button class="go" id="go">Reveal my aura →</button>
+        <p class="note">First card can take ~30s if the service was asleep, then ~8s each. Free tries are limited per day — the paid x402 endpoint below is unlimited.</p>
+      </div>
+      <div class="stage" id="stage">
+        <div class="ph">Your card will appear here.</div>
+      </div>
+    </div>
+  </div></section>
 
   <section><div class="wrap">
     <h2 class="serif">What one call gives you</h2>
@@ -115,6 +148,38 @@ curl -X POST <span class="k">${base}/v1/aura-card</span> \\
     <span class="brand"><span class="b"></span>${AGENT_NAME.toUpperCase()} · x402</span>
     <span>Agent ID ${AGENT_ID} · <a href="${GITHUB}">GitHub</a> · Built for the OKX.AI Genesis Hackathon</span>
   </div></footer>
+
+  <script>
+  (function(){
+    var desc=document.getElementById('desc'),go=document.getElementById('go'),
+        stage=document.getElementById('stage'),chips=document.getElementById('chips');
+    var ideas=[
+      'my messy desk','a rainy Sunday with nothing to do','my cat who thinks he runs the house',
+      'friday afternoon deploy energy','all black outfit, tired eyes','a half-dead succulent on the windowsill'
+    ];
+    ideas.forEach(function(t){
+      var c=document.createElement('span');c.className='chip';c.textContent=t;
+      c.onclick=function(){desc.value=t;desc.focus();};chips.appendChild(c);
+    });
+    function esc(s){return String(s).replace(/[&<>]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[m];});}
+    go.onclick=function(){
+      var d=(desc.value||'').trim();
+      if(d.length<3){desc.focus();stage.innerHTML='<div class="ph">Tell it something about you first — a desk, an outfit, a pet, a mood.</div>';return;}
+      go.disabled=true;
+      stage.innerHTML='<div><div class="spin"></div><div class="ph">Reading your aura… first card can take ~30s.</div></div>';
+      fetch('/try',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({description:d})})
+        .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+        .then(function(o){
+          if(!o.ok){var m=(o.j&&o.j.error&&o.j.error.message)||'Something went wrong. Try again.';
+            stage.innerHTML='<div class="ph">'+esc(m)+'</div>';return;}
+          stage.innerHTML='<div><img alt="Your Aura Card" src="data:image/png;base64,'+o.j.card_png_base64+'"/>'+
+            '<div class="reveal-read"><b>'+esc(o.j.title||'')+'</b><br>'+esc(o.j.reading||'')+'</div></div>';
+        })
+        .catch(function(){stage.innerHTML='<div class="ph">Network hiccup. Give it another go.</div>';})
+        .then(function(){go.disabled=false;});
+    };
+  })();
+  </script>
 </body>
 </html>`;
 }
