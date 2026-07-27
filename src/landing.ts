@@ -94,7 +94,7 @@ export function landingPage(): string {
 
   <section><div class="wrap">
     <h2 class="serif">Call it like an agent</h2>
-    <p class="sub">A standard MCP server. Discovery is free; a paid call settles 0.5 USDT on-chain via x402. No signup, no API key.</p>
+    <p class="sub">A standard x402-paid HTTP endpoint. Discovery is free; a paid call settles ${config.feeUsdt} USDT on-chain via x402. No signup, no API key.</p>
     <pre><span class="c"># 1 · call with no payment — the server quotes a price</span>
 curl -X POST <span class="k">${base}/v1/aura-card</span> \\
   -H 'content-type: application/json' \\
@@ -103,7 +103,7 @@ curl -X POST <span class="k">${base}/v1/aura-card</span> \\
 <span class="c"># → HTTP 402 Payment Required — network, token, amount, payee.</span>
 <span class="c"># 2 · sign a gasless USDT authorization, retry → 200 + your card.</span></pre>
     <div class="kv">
-      <span class="key">MCP endpoint</span><span class="val">${base}/mcp</span>
+      <span class="key">Paid endpoint</span><span class="val">${base}/v1/aura-card</span>
       <span class="key">Network</span><span class="val">${NETWORK} (X Layer)</span>
       <span class="key">Token</span><span class="val">USD₮0 · ${USDT0_ADDRESS}</span>
       <span class="key">Price</span><span class="val">${config.feeUsdt} USDT per call</span>

@@ -1,0 +1,89 @@
+================================================================
+AURA CARD — LIVE DEMO CUE SHEET  (short · smooth · pointwise)
+OKX.AI Genesis Hackathon · Agent ID 6134
+Total: ~3 minutes. Read the bold lines, do the [actions].
+================================================================
+
+────────────────────────────────────────────────
+BEFORE YOU START (2 min prep — do NOT skip)
+────────────────────────────────────────────────
+□ Warm the service: run one card ~30s before (Render cold-starts).
+□ Open 2 windows: BROWSER + TERMINAL (font ≥ 16pt).
+□ Browser tabs, left→right:
+    1. https://aura-card-asp.onrender.com          (landing)
+    2. .../.well-known/agent-card.json             (machine view)
+    3. your OKX.AI agent page (6134)
+    4. github.com/pranay123-stack/aura-card-asp
+□ Have out/openai-2.png and out/live-card.png ready to open.
+
+
+────────────────────────────────────────────────
+TIMELINE — what to do, minute by minute
+────────────────────────────────────────────────
+
+▶ 0:00–0:20  ·  HOOK   [screen: landing page]
+   • "This is Aura Card — a paid AI agent on OKX.AI."
+   • "You describe your desk, outfit, pet, or mood — it gives you a
+      shareable card: a witty reading, a colour palette, and generated art."
+   • "It charges 50 cents a call, settled on-chain in USDT. Watch."
+
+▶ 0:20–0:45  ·  IT'S REAL & LIVE   [screen: scroll landing → agent-card tab]
+   • "It's live and public. Here's the service describing itself —"
+   • [point] "the tool, the price, the token, the network."
+   • "Discovery is free; you only pay when you generate."
+
+▶ 0:45–1:30  ·  THE PRODUCT   [screen: TERMINAL]
+   • [run] $ npm run demo
+   • (talk while it generates, ~6s each)
+   • [open one card full-screen] read the reading OUT LOUD, deadpan.
+   • "Specific, funny, references what you told it. That's a card you'd post."
+
+▶ 1:30–2:05  ·  THE CLEVER BIT   [screen: 2 cards side by side]
+   • "The art isn't decoration — it's the same read as the words."
+   • "One model call writes the reading AND the 'visual DNA' that draws
+      the art. Frazzled desk → chaotic art. Calm Sunday → soft art."
+   • "It's procedural: instant, free, and can't fail mid-call."
+
+▶ 2:05–2:40  ·  THE PAYMENT   [screen: TERMINAL]
+   • [run] $ curl -s -D - -o /dev/null -X POST \
+       https://aura-card-asp.onrender.com/v1/aura-card \
+       -H 'content-type: application/json' \
+       -d '{"description":"three mugs and a plastic dinosaur"}' \
+       | grep -iE 'HTTP|payment-required'
+   • [freeze on HTTP 402] "402 Payment Required — not an error, a price tag."
+   • "Network, token, amount, payee — machine-readable. The buyer's agent
+      signs a gasless USDT payment, retries, and settles on-chain. No signup,
+      no API key, no human touching a wallet."
+
+▶ 2:40–3:00  ·  CLOSE   [screen: OKX.AI agent page 6134, then a card]
+   • "Registered on-chain as an ERC-8004 agent — ID 6134, on X Layer."
+   • "A real, complete, pay-per-call agent service — where the art and the
+      words come from the same read of you."
+   • "Machines paying machines, and you get something you'd actually share.
+      Link's below — go get read."
+
+
+────────────────────────────────────────────────
+THE 3 COMMANDS (copy-paste order)
+────────────────────────────────────────────────
+1) npm run demo
+2) curl -s -D - -o /dev/null -X POST https://aura-card-asp.onrender.com/v1/aura-card -H 'content-type: application/json' -d '{"description":"three mugs and a plastic dinosaur"}' | grep -iE 'HTTP|payment-required'
+3) (optional, if buyer wallet funded) npm run paid "my desk: three mugs and a dino"
+
+
+────────────────────────────────────────────────
+30-SECOND SUMMARY (if you only have half a minute)
+────────────────────────────────────────────────
+"Aura Card is a live, on-chain, pay-per-call AI agent on OKX.AI. Describe
+ your vibe, pay 0.5 USDT over x402, get a shareable card — a witty reading,
+ a palette, and art all drawn from the same read. Agent ID 6134, on X Layer,
+ open source. Machines paying machines for something you'd actually post."
+
+
+────────────────────────────────────────────────
+DELIVERY TIPS
+────────────────────────────────────────────────
+• Calm > fast. Pause on the card reveal — the reading is the wow.
+• Use YOUR real, slightly embarrassing description — specificity sells it.
+• If a live call stalls, cut to a pre-made card (out/) and keep talking.
+• Don't pitch the landing page. Pitch the paid agent + "art = the reading".
